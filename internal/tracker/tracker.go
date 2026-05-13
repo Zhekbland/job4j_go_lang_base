@@ -22,8 +22,14 @@ func NewTracker() *Tracker {
 	return &Tracker{}
 }
 
-func (t *Tracker) AddItem(item Item) {
+func (t *Tracker) AddItem(item Item) (Item, error) {
+	_, ok := t.indexOf(item.ID)
+	if ok {
+		return item, ErrAlreadyExists
+	}
+
 	t.items = append(t.items, item)
+	return item, nil
 }
 
 func (t *Tracker) GetItems() []Item {
@@ -42,14 +48,14 @@ func (t *Tracker) DeleteItem(id string) bool {
 	return true
 }
 
-func (t *Tracker) UpdateItem(id string, newName string) bool {
-	idx, ok := t.indexOf(id)
+func (t *Tracker) UpdateItem(item Item) (Item, error) {
+	idx, ok := t.indexOf(item.ID)
 	if !ok {
-		return false
+		return item, ErrNotFound
 	}
 
-	t.items[idx].Name = newName
-	return true
+	t.items[idx] = item
+	return item, nil
 }
 
 func (t *Tracker) FindItemByPartName(partName string) []Item {
