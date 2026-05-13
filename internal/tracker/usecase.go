@@ -17,8 +17,8 @@ func (u AddUsecase) Done(in Input, out Output, tracker *Tracker) {
 
 type GetUsecase struct{}
 
-func (u GetUsecase) Done(in Input, out Output, tracker *Tracker) {
-	for _, item := range tracker.Items {
+func (u GetUsecase) Done(_ Input, out Output, tracker *Tracker) {
+	for _, item := range tracker.items {
 		out.Out(item.toString())
 	}
 }
@@ -33,7 +33,7 @@ func (u UpdateUsecase) Done(in Input, out Output, tracker *Tracker) {
 
 	res := tracker.UpdateItem(id, newName)
 	if !res {
-		out.Out("Update failed or item not found")
+		out.Out("Item not found")
 		return
 	}
 
@@ -48,7 +48,7 @@ func (u DeleteUsecase) Done(in Input, out Output, tracker *Tracker) {
 
 	res := tracker.DeleteItem(id)
 	if !res {
-		out.Out("Delete failed or item not found")
+		out.Out("Item not found")
 		return
 	}
 
