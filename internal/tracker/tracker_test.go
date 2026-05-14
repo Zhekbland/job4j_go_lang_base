@@ -18,8 +18,9 @@ func TestTracker(t *testing.T) {
 			Name: "First Item",
 		}
 
-		res, _ := track.AddItem(item)
-		assert.Equal(t, res, item)
+		added, err := track.AddItem(item)
+		assert.NoError(t, err)
+		assert.Equal(t, added, item)
 	})
 
 	t.Run("successfully get item", func(t *testing.T) {
@@ -30,9 +31,12 @@ func TestTracker(t *testing.T) {
 			ID:   "1",
 			Name: "First Item",
 		}
-		_, _ = track.AddItem(item)
+		added, err := track.AddItem(item)
 
 		res := track.GetItems()
+
+		assert.NoError(t, err)
+		assert.Equal(t, item, added)
 		assert.Equal(t, res[0], item)
 	})
 
@@ -44,11 +48,15 @@ func TestTracker(t *testing.T) {
 			ID:   "1",
 			Name: "First Item",
 		}
-		_, _ = track.AddItem(item)
+		added, err := track.AddItem(item)
+		assert.NotEmpty(t, added)
+		assert.NoError(t, err)
 
 		item.Name = "Second Item"
-		_, err := track.UpdateItem(item)
-		assert.Nil(t, err)
+		res, err := track.UpdateItem(item)
+
+		assert.NoError(t, err)
+		assert.Equal(t, item, res)
 	})
 
 	t.Run("successfully delete item", func(t *testing.T) {
@@ -59,11 +67,13 @@ func TestTracker(t *testing.T) {
 			ID:   "1",
 			Name: "First Item",
 		}
-		_, _ = track.AddItem(item)
-		track.DeleteItem("1")
+		added, err := track.AddItem(item)
+		assert.NotEmpty(t, added)
+		assert.NoError(t, err)
 
+		track.DeleteItem("1")
 		res := track.GetItems()
-		assert.Equal(t, len(res), 0)
+		assert.Empty(t, res)
 	})
 
 	t.Run("successfully find item", func(t *testing.T) {
@@ -78,11 +88,17 @@ func TestTracker(t *testing.T) {
 			ID:   "2",
 			Name: "Second Item",
 		}
-		_, _ = track.AddItem(item1)
-		_, _ = track.AddItem(item2)
+
+		added, err := track.AddItem(item1)
+		assert.NotEmpty(t, added)
+		assert.NoError(t, err)
+
+		added, err = track.AddItem(item2)
+		assert.NotEmpty(t, added)
+		assert.NoError(t, err)
 
 		res := track.FindItemByPartName("Item")
-		assert.Equal(t, len(res), 2)
+		assert.Len(t, res, 2)
 	})
 
 	t.Run("error add item - already exist", func(t *testing.T) {
@@ -93,9 +109,12 @@ func TestTracker(t *testing.T) {
 			ID:   "1",
 			Name: "First Item",
 		}
-		_, _ = track.AddItem(item)
-		_, err := track.AddItem(item)
+		firstAdded, err := track.AddItem(item)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, firstAdded)
 
+		secondAdded, err := track.AddItem(item)
+		assert.NotEmpty(t, secondAdded)
 		assert.ErrorIs(t, err, tracker.ErrAlreadyExists)
 	})
 
@@ -108,7 +127,8 @@ func TestTracker(t *testing.T) {
 			Name: "First Item",
 		}
 
-		_, err := track.UpdateItem(item)
+		res, err := track.UpdateItem(item)
+		assert.NotEmpty(t, res)
 		assert.ErrorIs(t, err, tracker.ErrNotFound)
 	})
 }
