@@ -61,3 +61,62 @@ func (r *RepoPg) Get(ctx context.Context, id string) (tracker.Item, error) {
 
 	return it, err
 }
+
+func (r *RepoPg) Update(ctx context.Context, it tracker.Item) error {
+	res, err := r.pool.Exec(
+		ctx,
+		`update items set name = $1 WHERE id = $2`,
+		it.Name, it.ID,
+	)
+	if err != nil {
+		return fmt.Errorf("r.pool.Exec: %w", err)
+	}
+	if res.RowsAffected() == 0 {
+		return tracker.ErrNotFound
+	}
+
+	return nil
+}
+
+func (r *RepoPg) Delete(ctx context.Context, id string) error {
+	res, err := r.pool.Exec(
+		ctx,
+		`delete from items where id = $1`,
+		id,
+	)
+	if err != nil {
+		return fmt.Errorf("r.pool.Exec: %w", err)
+	}
+	if res.RowsAffected() == 0 {
+		return tracker.ErrNotFound
+	}
+
+	return nil
+}
+
+func (r *RepoPg) FindByName(ctx context.Context, name string) ([]tracker.Item, error) {
+	rows, err := r.pool.Query(
+		ctx,
+		`select id, name from items where name = $1`,
+		name,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var items []tracker.Item
+	for rows.Next() {
+		item := tracker.Item{}
+		if err := rows.Scan(&item.ID, &item.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, item)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return items, nil
+}
